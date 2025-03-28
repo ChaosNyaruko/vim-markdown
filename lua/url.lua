@@ -6,36 +6,8 @@ local ts_url_type = '"@markup.link.url.markdown_inline"'
 local syn_id_name = function(bufnr, row, col, filter)
     local found = "not found"
     local items = vim.inspect_pos(bufnr, row, col, filter)
-
-    local lines = { {} }
-
-    local function append(str, hl)
-        table.insert(lines[#lines], { str, hl })
-    end
-
-    local function nl()
-        table.insert(lines, {})
-    end
-
-    local function item(data, comment)
-        append('  - ')
-        append(data.hl_group, data.hl_group)
-        append(' ')
-        if data.hl_group ~= data.hl_group_link then
-            append('links to ', 'MoreMsg')
-            append(data.hl_group_link, data.hl_group_link)
-            append('   ')
-        end
-        if comment then
-            append(comment, 'Comment')
-        end
-        nl()
-    end
-
     -- treesitter
     if #items.treesitter > 0 then
-        append('Treesitter', 'Title')
-        nl()
         for _, capture in ipairs(items.treesitter) do
             local syn = vim.inspect(capture.hl_group)
             -- print(syn)
@@ -44,40 +16,9 @@ local syn_id_name = function(bufnr, row, col, filter)
             elseif syn == ts_label_type then
                 found = ts_label_type
             end
-            item(
-                capture,
-                string.format(
-                    'priority: %d   language: %s',
-                    capture.metadata.priority or vim.hl.priorities.treesitter,
-                    capture.lang
-                )
-            )
         end
-        nl()
     end
 
-    if #lines[#lines] == 0 then
-        table.remove(lines)
-    end
-
-    local chunks = {}
-    for _, line in ipairs(lines) do
-        vim.list_extend(chunks, line)
-        table.insert(chunks, { '\n' })
-    end
-    if #chunks == 0 then
-        chunks = {
-            {
-                'No items found at position '
-                .. items.row
-                .. ','
-                .. items.col
-                .. ' in buffer '
-                .. items.buffer,
-            },
-        }
-    end
-    vim.api.nvim_echo(chunks, false, {})
     return found
 end
 
