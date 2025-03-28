@@ -642,6 +642,7 @@ function! s:Markdown_GetUrlForPosition(lnum, col)
     let l:col = a:col
     let l:syn = synIDattr(synID(l:lnum, l:col, 1), 'name')
 
+
     if l:syn ==# 'mkdInlineURL' || l:syn ==# 'mkdURL' || l:syn ==# 'mkdLinkDefTarget'
         " Do nothing.
     elseif l:syn ==# 'mkdLink'
@@ -660,11 +661,32 @@ function! s:Markdown_GetUrlForPosition(lnum, col)
             return ''
         endif
     else
-        return ''
+        " try treesitter syntax
+        let [l:left, l:right, l:status] = <sid>Markdown_TSGetUrlForPosition(l:lnum, l:col)
+        if l:status != 0
+            return ''
+        endif
+        echom "find " .. l:left .. " " .. l:right
+        return getline(l:lnum)[l:left - 1 : l:right - 1]
     endif
 
     let [l:left, l:right] = <sid>FindCornersOfSyntax(l:lnum, l:col)
     return getline(l:lnum)[l:left - 1 : l:right - 1]
+endfunction
+
+function! s:Markdown_TSGetUrlForPosition(lnum, col)
+    if !has("nvim-0.10")
+        echom "nvim-0.10 is required to use this feature."
+        return ""
+    endif
+    let l:lnum = a:lnum
+    let l:col = a:col
+    " redir => inspect
+    " lua vim.show_pos()
+    " redir END
+    " echo inspect
+    let l:info = luaeval('require("url").ts_syn_type()')
+    return l:info
 endfunction
 
 " Front end for GetUrlForPosition.
