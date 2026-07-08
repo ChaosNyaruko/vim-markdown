@@ -772,7 +772,7 @@ if !exists('*s:EditUrlUnderCursor')
 endif
 
 function! s:VersionAwareNetrwBrowseX(url)
-    if has('patch-9.1.1588')
+    if has('patch-9.1.1588') || has('nvim')
         call netrw#BrowseX(a:url)
     elseif has('patch-7.4.567')
         call netrw#BrowseX(a:url, 0)
